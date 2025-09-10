@@ -124,6 +124,27 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
         return new AccountApiException(ErrorCode.ACCOUNT_ALREADY_EXISTS, account.getExternalKey());
     }
 
+  /**
+     * Publishes an event on the internal bus after an account has been created.
+     *
+     * <p>This method is triggered once the account creation transaction
+     * has been committed. Its purpose is to notify other system components
+     * that a new account has been created, enabling dependent processes
+     * such as subscription initialization, payment method setup,
+     * auditing, and more.</p>
+     *
+     * <p>The internal context is rehydrated with the recordId of the newly
+     * created account to ensure the event contains full audit and traceability
+     * information in a multi-tenant environment.</p>
+     *
+     * @param account                   Original account object requested for creation.
+     * @param savedAccount              Persisted account object after creation.
+     * @param changeType                Type of change applied (only INSERT is relevant here).
+     * @param entitySqlDaoWrapperFactory DAO factory used to handle the current transaction.
+     * @param context                   Internal call context, used for auditing and security.
+     * @throws BillingExceptionBase      If an error occurs while publishing the event to the bus.
+     **/
+
     @Override
     protected void postBusEventFromTransaction(final AccountModelDao account, final AccountModelDao savedAccount, final ChangeType changeType,
                                                final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalCallContext context) throws BillingExceptionBase {
@@ -149,6 +170,23 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
             log.warn("Failed to post account creation event for accountId='{}'", savedAccount.getId(), e);
         }
     }
+
+  /**
+     * Retrieves an immutable account from the database using its external key.
+     *
+     * <p>This method allows fetching account data based on its business identifier
+     * (externalKey), instead of relying on the internal UUID.
+     * It is primarily used in integrations or business flows where the external key
+     * is the main reference for external systems.</p>
+     *
+     * <p>The operation is executed in a read-only transactional context,
+     * ensuring consistency without modifying the database state.</p>
+     *
+     * @param key     External key associated with the account.
+     * @param context Current tenant context, used to resolve multi-tenancy
+     *                and security restrictions.
+     * @return        The {@link AccountModelDao} object for the given key, or null if not found.
+     **/
 
     @Override
     public AccountModelDao getAccountByKey(final String key, final InternalTenantContext context) {
