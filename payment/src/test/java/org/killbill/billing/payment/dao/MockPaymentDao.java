@@ -224,36 +224,22 @@ public class MockPaymentDao extends MockEntityDaoBase<PaymentModelDao, Payment, 
     }
 
     @Override
-    public PaymentAndTransactionModelDao updatePaymentAndTransactionOnCompletion(final UUID accountId, final UUID attemptId, final UUID paymentId, final TransactionType transactionType,
-                                                                                 final String currentPaymentStateName, final UUID transactionId,
-                                                                                 final TransactionStatus paymentStatus, final BigDecimal processedAmount, final Currency processedCurrency,
-                                                                                 final String gatewayErrorCode, final String gatewayErrorMsg, final boolean isApiPayment, final InternalCallContext context) {
-        return updatePaymentAndTransactionOnCompletion(accountId, attemptId, paymentId, transactionType,
-                                                       currentPaymentStateName, null, transactionId,
-                                                       paymentStatus, processedAmount, processedCurrency,
-                                                       gatewayErrorCode, gatewayErrorMsg, isApiPayment, context);
-    }
-
-    @Override
-    public PaymentAndTransactionModelDao updatePaymentAndTransactionOnCompletion(final UUID accountId, final UUID attemptId, final UUID paymentId, final TransactionType transactionType,
-                                                                                 final String currentPaymentStateName, final String lastSuccessPaymentStateName, final UUID transactionId,
-                                                                                 final TransactionStatus paymentStatus, final BigDecimal processedAmount, final Currency processedCurrency,
-                                                                                 final String gatewayErrorCode, final String gatewayErrorMsg, final boolean isApiPayment, final InternalCallContext context) {
+    public PaymentAndTransactionModelDao updatePaymentAndTransactionOnCompletion(final PaymentCompletionParams params) {
         final PaymentAndTransactionModelDao paymentAndTransactionModelDao = new PaymentAndTransactionModelDao();
 
         synchronized (this) {
-            final PaymentModelDao payment = payments.get(paymentId);
+            final PaymentModelDao payment = payments.get(params.paymentId);
             if (payment != null) {
-                payment.setStateName(currentPaymentStateName);
+                payment.setStateName(params.currentPaymentStateName);
             }
-            final PaymentTransactionModelDao transaction = transactions.get(transactionId);
+            final PaymentTransactionModelDao transaction = transactions.get(params.transactionId);
             if (transaction != null) {
-                transaction.setAttemptId(attemptId);
-                transaction.setTransactionStatus(paymentStatus);
-                transaction.setProcessedAmount(processedAmount);
-                transaction.setProcessedCurrency(processedCurrency);
-                transaction.setGatewayErrorCode(gatewayErrorCode);
-                transaction.setGatewayErrorMsg(gatewayErrorMsg);
+                transaction.setAttemptId(params.attemptId);
+                transaction.setTransactionStatus(params.paymentStatus);
+                transaction.setProcessedAmount(params.processedAmount);
+                transaction.setProcessedCurrency(params.processedCurrency);
+                transaction.setGatewayErrorCode(params.gatewayErrorCode);
+                transaction.setGatewayErrorMsg(params.gatewayErrorMsg);
             }
 
             paymentAndTransactionModelDao.setPaymentModelDao(payment);

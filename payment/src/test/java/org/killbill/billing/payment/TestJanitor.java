@@ -51,6 +51,7 @@ import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.bus.PaymentBusEventHandler;
 import org.killbill.billing.payment.core.janitor.Janitor;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
+import org.killbill.billing.payment.dao.PaymentCompletionParams;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
@@ -355,9 +356,24 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         // Artificially move the transaction status to UNKNOWN
         final String paymentStateName = paymentSMHelper.getErroredStateForTransaction(TransactionType.AUTHORIZE).toString();
         testListener.pushExpectedEvent(NextEvent.PAYMENT_PLUGIN_ERROR);
-        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), null, payment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
-                                                           payment.getTransactions().get(0).getId(), TransactionStatus.UNKNOWN, requestedAmount, account.getCurrency(),
-                                                           "foo", "bar", true, internalCallContext);
+        paymentDao.updatePaymentAndTransactionOnCompletion(
+            PaymentCompletionParams.builder()
+                .accountId(account.getId())
+                .attemptId(null)
+                .paymentId(payment.getId())
+                .transactionType(TransactionType.AUTHORIZE)
+                .currentState(paymentStateName)
+                .lastSuccessState(paymentStateName)
+                .transactionId(payment.getTransactions().get(0).getId())
+                .status(TransactionStatus.UNKNOWN)
+                .processedAmount(requestedAmount)
+                .processedCurrency(account.getCurrency())
+                .gatewayErrorCode("foo")
+                .gatewayErrorMsg("bar")
+                .apiPayment(true)
+                .context(internalCallContext)
+                .build()
+        );
         testListener.assertListenerStatus();
 
         // Move clock for notification to be processed
@@ -388,9 +404,24 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         // Artificially move the transaction status to UNKNOWN
         final String paymentStateName = paymentSMHelper.getErroredStateForTransaction(TransactionType.AUTHORIZE).toString();
         testListener.pushExpectedEvent(NextEvent.PAYMENT_PLUGIN_ERROR);
-        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), null, payment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
-                                                           payment.getTransactions().get(0).getId(), TransactionStatus.UNKNOWN, requestedAmount, account.getCurrency(),
-                                                           "foo", "bar", true, internalCallContext);
+        paymentDao.updatePaymentAndTransactionOnCompletion(
+            PaymentCompletionParams.builder()
+                .accountId(account.getId())
+                .attemptId(null)
+                .paymentId(payment.getId())
+                .transactionType(TransactionType.AUTHORIZE)
+                .currentState(paymentStateName)
+                .lastSuccessState(paymentStateName)
+                .transactionId(payment.getTransactions().get(0).getId())
+                .status(TransactionStatus.UNKNOWN)
+                .processedAmount(requestedAmount)
+                .processedCurrency(account.getCurrency())
+                .gatewayErrorCode("foo")
+                .gatewayErrorMsg("bar")
+                .apiPayment(true)
+                .context(internalCallContext)
+                .build()
+        );
         testListener.assertListenerStatus();
 
         final List<AuditLogWithHistory> paymentTransactionHistoryBeforeJanitor = paymentDao.getPaymentTransactionAuditLogsWithHistoryForId(payment.getTransactions().get(0).getId(), AuditLevel.FULL, internalCallContext);
@@ -435,9 +466,24 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         // Artificially move the transaction status to UNKNOWN
         final String paymentStateName = paymentSMHelper.getErroredStateForTransaction(TransactionType.AUTHORIZE).toString();
         testListener.pushExpectedEvent(NextEvent.PAYMENT_PLUGIN_ERROR);
-        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), null, payment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
-                                                           payment.getTransactions().get(0).getId(), TransactionStatus.UNKNOWN, requestedAmount, account.getCurrency(),
-                                                           "foo", "bar", true, internalCallContext);
+        paymentDao.updatePaymentAndTransactionOnCompletion(
+            PaymentCompletionParams.builder()
+                .accountId(account.getId())
+                .attemptId(null)
+                .paymentId(payment.getId())
+                .transactionType(TransactionType.AUTHORIZE)
+                .currentState(paymentStateName)
+                .lastSuccessState(paymentStateName)
+                .transactionId(payment.getTransactions().get(0).getId())
+                .status(TransactionStatus.UNKNOWN)
+                .processedAmount(requestedAmount)
+                .processedCurrency(account.getCurrency())
+                .gatewayErrorCode("foo")
+                .gatewayErrorMsg("bar")
+                .apiPayment(true)
+                .context(internalCallContext)
+                .build()
+        );
         testListener.assertListenerStatus();
 
         // Move clock for notification to be processed
@@ -468,9 +514,24 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         // Artificially move the transaction status to PENDING
         final String paymentStateName = paymentSMHelper.getPendingStateForTransaction(TransactionType.AUTHORIZE).toString();
         testListener.pushExpectedEvent(NextEvent.PAYMENT);
-        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), null, payment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
-                                                           payment.getTransactions().get(0).getId(), TransactionStatus.PENDING, requestedAmount, account.getCurrency(),
-                                                           "loup", "chat", true, internalCallContext);
+        paymentDao.updatePaymentAndTransactionOnCompletion(
+            PaymentCompletionParams.builder()
+                .accountId(account.getId())
+                .attemptId(null)
+                .paymentId(payment.getId())
+                .transactionType(TransactionType.AUTHORIZE)
+                .currentState(paymentStateName)
+                .lastSuccessState(paymentStateName)
+                .transactionId(payment.getTransactions().get(0).getId())
+                .status(TransactionStatus.PENDING)
+                .processedAmount(requestedAmount)
+                .processedCurrency(account.getCurrency())
+                .gatewayErrorCode("loup")
+                .gatewayErrorMsg("chat")
+                .apiPayment(true)
+                .context(internalCallContext)
+                .build()
+        );
         testListener.assertListenerStatus();
 
         // Move clock for notification to be processed ((default config is set for one hour)
@@ -483,8 +544,6 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(updatedPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
     }
 
-    // The test will check that when a PENDING entry stays PENDING, we go through all our retries and eventually give up (no infinite loop of retries)
-    // Flaky, see https://github.com/killbill/killbill/issues/860
     @Test(groups = "slow", retryAnalyzer = FlakyRetryAnalyzer.class)
     public void testPendingEntriesThatDontMove() throws Exception {
 
@@ -507,9 +566,24 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         final String paymentStateName = paymentSMHelper.getPendingStateForTransaction(TransactionType.AUTHORIZE).toString();
 
         testListener.pushExpectedEvent(NextEvent.PAYMENT);
-        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), null, payment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
-                                                           payment.getTransactions().get(0).getId(), TransactionStatus.PENDING, requestedAmount, account.getCurrency(),
-                                                           "loup", "chat", true, internalCallContext);
+        paymentDao.updatePaymentAndTransactionOnCompletion(
+            PaymentCompletionParams.builder()
+                .accountId(account.getId())
+                .attemptId(null)
+                .paymentId(payment.getId())
+                .transactionType(TransactionType.AUTHORIZE)
+                .currentState(paymentStateName)
+                .lastSuccessState(paymentStateName)
+                .transactionId(payment.getTransactions().get(0).getId())
+                .status(TransactionStatus.PENDING)
+                .processedAmount(requestedAmount)
+                .processedCurrency(account.getCurrency())
+                .gatewayErrorCode("loup")
+                .gatewayErrorMsg("chat")
+                .apiPayment(true)
+                .context(internalCallContext)
+                .build()
+        );
         testListener.assertListenerStatus();
 
         // 1h, 1d
@@ -520,9 +594,6 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
             clock.addDeltaFromReality(cur.getMillis() + 1000);
 
             assertNotificationsCompleted(internalCallContext, 5);
-            // We add a sleep here to make sure the notification gets processed. Note that calling assertNotificationsCompleted alone would not work
-            // because there is a point in time where the notification queue is empty (showing notification was processed), but the processing of the notification
-            // will itself enter a new notification, and so the synchronization is difficult without writing *too much code*.
             Thread.sleep(1500);
             assertNotificationsCompleted(internalCallContext, 5);
 

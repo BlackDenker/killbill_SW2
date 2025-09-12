@@ -64,20 +64,24 @@ public class TestDefaultPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         final Currency processedCurrency = Currency.USD;
         final String gatewayErrorCode = UUID.randomUUID().toString().substring(0, 5);
         final String gatewayErrorMsg = UUID.randomUUID().toString();
-        paymentDao.updatePaymentAndTransactionOnCompletion(accountId,
-                                                           specifiedSecondPaymentTransactionModelDao.getAttemptId(),
-                                                           specifiedSecondPaymentTransactionModelDao.getPaymentId(),
-                                                           specifiedFirstPaymentTransactionModelDao.getTransactionType(),
-                                                           PaymentStateMachineHelper.STATE_NAMES.get(0),
-                                                           PaymentStateMachineHelper.STATE_NAMES.get(0),
-                                                           specifiedSecondPaymentTransactionModelDao.getId(),
-                                                           TransactionStatus.PAYMENT_FAILURE,
-                                                           processedAmount,
-                                                           processedCurrency,
-                                                           gatewayErrorCode,
-                                                           gatewayErrorMsg,
-                                                           true,
-                                                           internalCallContext);
+        paymentDao.updatePaymentAndTransactionOnCompletion(
+            PaymentCompletionParams.builder()
+                .accountId(accountId)
+                .attemptId(specifiedSecondPaymentTransactionModelDao.getAttemptId())
+                .paymentId(specifiedSecondPaymentTransactionModelDao.getPaymentId())
+                .transactionType(specifiedFirstPaymentTransactionModelDao.getTransactionType())
+                .currentState(PaymentStateMachineHelper.STATE_NAMES.get(0))
+                .lastSuccessState(PaymentStateMachineHelper.STATE_NAMES.get(0))
+                .transactionId(specifiedSecondPaymentTransactionModelDao.getId())
+                .status(TransactionStatus.PAYMENT_FAILURE)
+                .processedAmount(processedAmount)
+                .processedCurrency(processedCurrency)
+                .gatewayErrorCode(gatewayErrorCode)
+                .gatewayErrorMsg(gatewayErrorMsg)
+                .apiPayment(true)
+                .context(internalCallContext)
+                .build()
+        );
 
         final PaymentTransactionModelDao updatedSecondPaymentTransactionModelDao = paymentDao.getPaymentTransaction(specifiedSecondPaymentTransactionModelDao.getId(), internalCallContext);
         Assert.assertEquals(updatedSecondPaymentTransactionModelDao.getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);

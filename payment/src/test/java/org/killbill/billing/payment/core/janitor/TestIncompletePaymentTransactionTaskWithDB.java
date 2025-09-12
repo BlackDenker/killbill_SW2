@@ -29,6 +29,7 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.payment.dao.PaymentCompletionParams;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
@@ -138,20 +139,23 @@ public class TestIncompletePaymentTransactionTaskWithDB extends PaymentTestSuite
         Assert.assertEquals(transactionModel.getTransactionStatus().toString(), "UNKNOWN");
 
         paymentDao.updatePaymentAndTransactionOnCompletion(
-                account.getId(),
-                null,
-                payment.getId(),
-                TransactionType.AUTHORIZE,
-                "AUTH_SUCCESS",
-                "AUTH_SUCCESS",
-                transactionId,
-                TransactionStatus.SUCCESS,
-                BigDecimal.TEN,
-                Currency.EUR,
-                "200",
-                "Ok",
-                true,
-                internalCallContext);
+            PaymentCompletionParams.builder()
+                .accountId(account.getId())
+                .attemptId(null)
+                .paymentId(payment.getId())
+                .transactionType(TransactionType.AUTHORIZE)
+                .currentState("AUTH_SUCCESS")
+                .lastSuccessState("AUTH_SUCCESS")
+                .transactionId(transactionId)
+                .status(TransactionStatus.SUCCESS)
+                .processedAmount(BigDecimal.TEN)
+                .processedCurrency(Currency.EUR)
+                .gatewayErrorCode("200")
+                .gatewayErrorMsg("Ok")
+                .apiPayment(true)
+                .context(internalCallContext)
+                .build()
+        );
 
         paymentApi.createCapture(account,
                                  payment.getId(),

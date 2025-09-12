@@ -33,6 +33,7 @@ import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.PaymentPluginServiceRegistration;
 import org.killbill.billing.payment.dao.PaymentAndTransactionModelDao;
+import org.killbill.billing.payment.dao.PaymentCompletionParams;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentMethodModelDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
@@ -195,37 +196,25 @@ public class PaymentAutomatonDAOHelper {
         final String gatewayErrorCode = paymentInfoPlugin == null ? null : paymentInfoPlugin.getGatewayErrorCode();
         final String gatewayErrorMsg = paymentInfoPlugin == null ? null : paymentInfoPlugin.getGatewayError();
 
-        final PaymentAndTransactionModelDao paymentAndTransactionModelDao;
-        if (lastSuccessPaymentState != null || forceOverrideLastSuccessPaymentState) {
-            paymentAndTransactionModelDao = paymentDao.updatePaymentAndTransactionOnCompletion(accountId,
-                                                                                               attemptId,
-                                                                                               paymentId,
-                                                                                               transactionType,
-                                                                                               currentPaymentStateName,
-                                                                                               lastSuccessPaymentState,
-                                                                                               transactionId,
-                                                                                               transactionStatus,
-                                                                                               processedAmount,
-                                                                                               processedCurrency,
-                                                                                               gatewayErrorCode,
-                                                                                               gatewayErrorMsg,
-                                                                                               isApiPayment,
-                                                                                               internalCallContext);
-        } else {
-            paymentAndTransactionModelDao = paymentDao.updatePaymentAndTransactionOnCompletion(accountId,
-                                                                                               attemptId,
-                                                                                               paymentId,
-                                                                                               transactionType,
-                                                                                               currentPaymentStateName,
-                                                                                               transactionId,
-                                                                                               transactionStatus,
-                                                                                               processedAmount,
-                                                                                               processedCurrency,
-                                                                                               gatewayErrorCode,
-                                                                                               gatewayErrorMsg,
-                                                                                               isApiPayment,
-                                                                                               internalCallContext);
-        }
+        final PaymentCompletionParams completionParams = PaymentCompletionParams.builder()
+                .accountId(accountId)
+                .attemptId(attemptId)               // puede ser null
+                .paymentId(paymentId)
+                .transactionType(transactionType)
+                .currentState(currentPaymentStateName)
+                .lastSuccessState(lastSuccessPaymentState) // puede ser null
+                .transactionId(transactionId)
+                .status(transactionStatus)
+                .processedAmount(processedAmount)
+                .processedCurrency(processedCurrency)
+                .gatewayErrorCode(gatewayErrorCode)
+                .gatewayErrorMsg(gatewayErrorMsg)
+                .apiPayment(isApiPayment)
+                .context(internalCallContext)
+                .build();
+
+        final PaymentAndTransactionModelDao paymentAndTransactionModelDao =
+                paymentDao.updatePaymentAndTransactionOnCompletion(completionParams);
 
         return paymentAndTransactionModelDao;
     }

@@ -40,6 +40,7 @@ import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.payment.MockRecurringInvoiceItem;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
+import org.killbill.billing.payment.dao.PaymentCompletionParams;
 import org.killbill.billing.payment.dao.PaymentSqlDao;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
@@ -1719,8 +1720,24 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                                Collections.emptyList(), callContext);
 
         // Hack the Database to make it look like it was a failure
-        paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), null, payment.getId(), TransactionType.AUTHORIZE, "AUTH_ERRORED", null,
-                                                           payment.getTransactions().get(0).getId(), TransactionStatus.PLUGIN_FAILURE, null, null, null, null, true, internalCallContext);
+        paymentDao.updatePaymentAndTransactionOnCompletion(
+            PaymentCompletionParams.builder()
+                .accountId(account.getId())
+                .attemptId(null)
+                .paymentId(payment.getId())
+                .transactionType(TransactionType.AUTHORIZE)
+                .currentState("AUTH_ERRORED")
+                .lastSuccessState(null)
+                .transactionId(payment.getTransactions().get(0).getId())
+                .status(TransactionStatus.PLUGIN_FAILURE)
+                .processedAmount(null)
+                .processedCurrency(null)
+                .gatewayErrorCode(null)
+                .gatewayErrorMsg(null)
+                .apiPayment(true)
+                .context(internalCallContext)
+                .build()
+        );
         final PaymentSqlDao paymentSqlDao = dbi.onDemand(PaymentSqlDao.class);
         paymentSqlDao.updateLastSuccessPaymentStateName(payment.getId().toString(), "AUTH_ERRORED", null, internalCallContext);
 
